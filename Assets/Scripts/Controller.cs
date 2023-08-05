@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using SA.Items;
 
 namespace RM
 {
@@ -18,18 +19,36 @@ namespace RM
         [HideInInspector] public float mouseX;
         [HideInInspector] public float mouseY;
 
+        public bool isShooting = false;
+        public bool isReloading = false;
+        
         [HideInInspector] public float lookAngle;
         [HideInInspector] public float tiltAngle;
 
         public Transform pivotTransform;
         public Transform cameraTransform;
 
+        public RuntimeItem currentWeapon;
+
         private void Start()
+        {
+            Init("TestWeapon");
+        }
+
+        public void Init(string weaponId)
         {
             characterController = GetComponent<CharacterController>();
 
             Cursor.lockState = CursorLockMode.Locked;
             Cursor.visible = false;
+
+            if (isLocal )
+            {
+                Crosshair.singleton.Init(this);
+            }
+
+            currentWeapon = ItemManager.singleton.CreateItemInstance(weaponId);
+            currentWeapon.Reload();
         }
 
         private void FixedUpdate()
@@ -56,6 +75,7 @@ namespace RM
                 return;
             
             HandleInput();
+            HandleShooting();
         }
 
         void HandleInput()
@@ -64,6 +84,8 @@ namespace RM
             vertical = Input.GetAxis("Vertical");
             mouseX = Input.GetAxis("Mouse X");
             mouseY = Input.GetAxis("Mouse Y");
+            isShooting = Input.GetMouseButton(0);
+            isReloading = Input.GetKeyDown(KeyCode.R);
         }
 
         void HandleMovement(float delta)
@@ -99,6 +121,25 @@ namespace RM
             Vector3 tiltEuler = Vector3.zero;
             tiltEuler.x = tiltAngle;
             pivotTransform.localEulerAngles = tiltEuler;
+        }
+
+        void HandleShooting()
+        {
+            if (isShooting)
+            {
+                if (currentWeapon.canFire())
+                {
+                    currentWeapon.Shoot();
+                    Ballistics.RaycastBullet(cameraTransform.position, cameraTransform.forward, this);
+                }
+            }
+            else
+            {
+                if (isReloading)
+                {
+                    currentWeapon.Reload();
+                }
+            }
         }
     }
 }
