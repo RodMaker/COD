@@ -48,8 +48,7 @@ namespace SA.Items
 				return null;
 			}
 
-			RuntimeItem result = new RuntimeItem();
-			result.baseItem = baseItem;
+			RuntimeItem result = new RuntimeItem(baseItem);
 
 			if (!ignoreInstanceId)
 			{

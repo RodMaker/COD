@@ -8,18 +8,39 @@ namespace SA.Items
 	{
 		public string instanceId;
 		public Item baseItem;
+		public Weapon weapon
+		{
+			get
+			{
+				return (Weapon)baseItem;
+			}
+		}
+
+		public RuntimeItem(Item baseItem)
+		{
+			this.baseItem = baseItem;
+
+			if (baseItem is Weapon)
+			{
+				InitWeapon();
+			}
+		}
 
 		public int currentBullets;
 		public int maxBulletsCarrying;
 
 		float lastFired;
 
+		public void InitWeapon()
+		{
+			maxBulletsCarrying = weapon.maxBullets;
+		}
+
 		public bool canFire()
 		{
 			if (currentBullets > 0)
 			{
-				Weapon w = (Weapon)baseItem;
-				return (Time.realtimeSinceStartup - lastFired) > w.fireRate;
+				return (Time.realtimeSinceStartup - lastFired) > weapon.fireRate;
 			}
 
 			return false;	
@@ -33,20 +54,16 @@ namespace SA.Items
 
 		public void Reload() 
 		{ 
-			Weapon w = (Weapon)baseItem;
-			currentBullets = w.magazineBullets;
-
-			/*if (maxBulletsCarrying > w.magazineBullets)
+			if (maxBulletsCarrying > weapon.magazineBullets)
 			{
-				currentBullets = w.magazineBullets;
-				maxBulletsCarrying -= w.magazineBullets;
+				currentBullets = weapon.magazineBullets;
+				maxBulletsCarrying -= weapon.magazineBullets;
 			}
 			else
 			{
-				int dif = w.magazineBullets - maxBulletsCarrying;
-				currentBullets = dif;
+				currentBullets = maxBulletsCarrying;
 				maxBulletsCarrying = 0;
-			}*/
+			}
 		}
 	}
 }

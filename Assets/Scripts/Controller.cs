@@ -10,6 +10,7 @@ namespace RM
     {
         CharacterController characterController;
 
+        public bool isInteracting;
         public bool isLocal = true;
         public float speed = .5f;
         public float rotationSpeed = .5f;
@@ -44,11 +45,17 @@ namespace RM
 
             if (isLocal )
             {
-                Crosshair.singleton.Init(this);
+                SetActiveController();
             }
 
             currentWeapon = ItemManager.singleton.CreateItemInstance(weaponId);
-            currentWeapon.Reload();
+            FakeInteraction("Reloading", 1, currentWeapon.Reload);
+        }
+
+        public void SetActiveController()
+        {
+            Crosshair.singleton.Init(this);
+            GameUI.singleton.Init(this);
         }
 
         private void FixedUpdate()
@@ -125,6 +132,9 @@ namespace RM
 
         void HandleShooting()
         {
+            if (isInteracting)
+                return;
+
             if (isShooting)
             {
                 if (currentWeapon.canFire())
@@ -137,9 +147,39 @@ namespace RM
             {
                 if (isReloading)
                 {
-                    currentWeapon.Reload();
+                    FakeInteraction("Reloading", 1, currentWeapon.Reload);
                 }
             }
+        }
+
+        public delegate void OnFakeInteractionComplete();
+        
+        public void FakeInteraction(string interText, float amount, OnFakeInteractionComplete callback)
+        {
+            interactionText = interText;
+            StartCoroutine(FakeInterRoutine(amount, callback));
+        }
+
+        [HideInInspector] public float interactionAmount;
+        [HideInInspector] public string interactionText;
+        [HideInInspector] public float interactionMaxAmount;
+
+        IEnumerator FakeInterRoutine(float amount, OnFakeInteractionComplete callback)
+        {
+            isInteracting = true;
+
+            interactionAmount = amount;
+            interactionMaxAmount = amount;
+
+            while (interactionAmount > 0)
+            {
+                interactionAmount -= Time.deltaTime;
+                yield return null;
+            }
+
+            isInteracting = false;
+
+            callback?.Invoke();
         }
     }
 }
